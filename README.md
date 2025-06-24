@@ -13,6 +13,27 @@ A highly SEO-optimized directory web application that allows admins to create an
 - **Authentication**: Admin actions are protected.
 - **Dockerized**: Easy deployment with Docker Compose.
 
+## Getting Started
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/PyPranav/directory-app
+cd directory-app
+```
+
+### 2. Set up your environment variables
+- Copy `.env.example` to `.env` and fill in the required values as described above.
+
+### 3. Start with Docker Compose
+This will start both the PostgreSQL database and the Next.js app, run migrations, and seed initial data.
+
+```bash
+docker-compose up --build
+```
+
+The app will be available at [http://localhost:3000](http://localhost:3000).
+
+
 ## Environment Variables
 
 Create a `.env` file in the root directory with the following variables:
@@ -36,25 +57,6 @@ NEXT_PUBLIC_BASE_URL="http://localhost:3000" # set domain for prod
 
 > **Note:** You can refer to `.env.example`. Make sure to update the values to match your environment.
 
-## Getting Started
-
-### 1. Clone the repository
-```bash
-git clone <repo-url>
-cd directory-app
-```
-
-### 2. Set up your environment variables
-- Copy `.env.example` to `.env` and fill in the required values as described above.
-
-### 3. Start with Docker Compose
-This will start both the PostgreSQL database and the Next.js app, run migrations, and seed initial data.
-
-```bash
-docker-compose up --build
-```
-
-The app will be available at [http://localhost:3000](http://localhost:3000).
 
 ## Admin Usage
 - Visit `/create` to manage categories (add, edit, delete).
