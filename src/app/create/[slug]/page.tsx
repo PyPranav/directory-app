@@ -1,22 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { Edit, Trash2, Plus, Loader2, Globe, ArrowLeft } from "lucide-react";
+import type { Tools } from "@prisma/client";
+import { ArrowLeft, Edit, Globe, Loader2, Plus, Trash2 } from "lucide-react";
+import { useSession } from "next-auth/react";
+import Image from "next/image";
 import Link from "next/link";
-import ReactMarkdown from "react-markdown";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
-import { api } from "~/trpc/react";
-import { Button } from "~/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardFooter,
-} from "~/components/ui/card";
+import { ToolModal } from "~/app/_components/ToolModal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,7 +21,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "~/components/ui/alert-dialog";
-import { ToolModal } from "~/app/_components/tool-modal";
+import { Button } from "~/components/ui/button";
+import {
+  Card,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from "~/components/ui/card";
+import { api } from "~/trpc/react";
 
 type ToolData = {
   name: string;
@@ -39,28 +39,29 @@ type ToolData = {
 };
 
 const ToolAdminListing = () => {
+  const session = useSession()
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingTool, setEditingTool] = useState<any | null>(null);
+  const [editingTool, setEditingTool] = useState<Tools | null>(null);
   const [imgLoaded, setImgLoaded] = useState<Record<string, boolean>>({});
 
   const params = useParams();
   const router = useRouter();
-  const categoryId = params.id as string;
+  const categorySlug = params.slug as string;
 
   const utils = api.useUtils();
 
-  const { data: category } = api.categories.getById.useQuery({
-    id: categoryId,
+  const { data: category } = api.categories.getBySlug.useQuery({
+    slug: categorySlug,
   });
 
-  const { data: tools, isLoading } = api.tools.getByCategory.useQuery({
-    category: categoryId,
+  const { data: tools, isLoading } = api.tools.getByCategorySlug.useQuery({
+    categorySlug,
     name: "",
   });
 
   const createTool = api.tools.create.useMutation({
-    onSuccess: () => {
-      utils.tools.getByCategory.invalidate({ category: categoryId });
+    onSuccess: async() => {
+      await utils.tools.getByCategorySlug.invalidate({ categorySlug });
       toast.success("Tool created successfully!");
       setIsModalOpen(false);
     },
@@ -70,8 +71,8 @@ const ToolAdminListing = () => {
   });
 
   const updateTool = api.tools.update.useMutation({
-    onSuccess: () => {
-      utils.tools.getByCategory.invalidate({ category: categoryId });
+    onSuccess:async () => {
+      await utils.tools.getByCategorySlug.invalidate({ categorySlug });
       toast.success("Tool updated successfully!");
       setEditingTool(null);
       setIsModalOpen(false);
@@ -82,8 +83,8 @@ const ToolAdminListing = () => {
   });
 
   const deleteTool = api.tools.delete.useMutation({
-    onSuccess: () => {
-      utils.tools.getByCategory.invalidate({ category: categoryId });
+    onSuccess: async() => {
+      await utils.tools.getByCategorySlug.invalidate({ categorySlug });
       toast.success("Tool deleted successfully!");
     },
     onError: (error) => {
@@ -93,17 +94,17 @@ const ToolAdminListing = () => {
 
   const handleSubmit = async (data: ToolData) => {
     if (editingTool) {
-      setTimeout(()=>{
-        setImgLoaded({...imgLoaded, [editingTool.id]:true})
-      },1500)
+      setTimeout(() => {
+        setImgLoaded({ ...imgLoaded, [editingTool.id]: true });
+      }, 1500);
 
       updateTool.mutate({ ...data, id: editingTool.id });
-    } else {
-      createTool.mutate({ ...data, category: categoryId });
+    } else if (category) {
+      createTool.mutate({ ...data, category: category.id });
     }
   };
 
-  const handleEdit = (tool: any) => {
+  const handleEdit = (tool: Tools) => {
     setEditingTool(tool);
     setIsModalOpen(true);
   };
@@ -117,11 +118,21 @@ const ToolAdminListing = () => {
     setIsModalOpen(true);
   };
 
+  useEffect(()=>{
+    if(session.status==='unauthenticated'){
+      router.push("/api/auth/signin")
+    }
+  }, [session, router])
+
   return (
     <div className="container mx-auto p-6">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <Button variant="ghost" onClick={() => router.back()} className="mb-2">
+          <Button
+            variant="ghost"
+            onClick={() => router.back()}
+            className="mb-2"
+          >
             <ArrowLeft /> Back to Categories
           </Button>
           <h1 className="text-2xl font-bold sm:text-3xl">
@@ -160,25 +171,39 @@ const ToolAdminListing = () => {
                 <CardHeader className="flex flex-row items-start gap-4 space-y-0">
                   {tool.logo_url && imgLoaded[tool.id] !== false && (
                     <div className="relative h-12 w-12 flex-shrink-0 rounded-lg">
-                      <img
+                      <Image
                         src={tool.logo_url}
                         alt={`${tool.name} logo`}
                         className="h-full w-full object-contain"
                         onError={() =>
-                          setImgLoaded((prev) => ({ ...prev, [tool.id]: false }))
+                          setImgLoaded((prev) => ({
+                            ...prev,
+                            [tool.id]: false,
+                          }))
                         }
+                        unoptimized
+                        width={100}
+                        height={100}
                       />
                     </div>
                   )}
                   <div className="flex-grow">
-                    <CardTitle className="text-xl font-bold mb-1">{tool.name}</CardTitle>
+                    <CardTitle className="mb-1 text-xl font-bold">
+                      {tool.name}
+                    </CardTitle>
                     {tool.created_at && (
-                      <div className="text-xs text-muted-foreground mb-1">
-                        Created on {new Date(tool.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                      <div className="text-muted-foreground mb-1 text-xs">
+                        Created on{" "}
+                        {new Date(tool.created_at).toLocaleDateString(
+                          undefined,
+                          { year: "numeric", month: "short", day: "numeric" },
+                        )}
                       </div>
                     )}
                     {tool.description ? null : (
-                      <div className="text-muted-foreground text-sm mb-2">No description provided.</div>
+                      <div className="text-muted-foreground mb-2 text-sm">
+                        No description provided.
+                      </div>
                     )}
                   </div>
                 </CardHeader>
@@ -197,9 +222,12 @@ const ToolAdminListing = () => {
                   )}
                 </CardFooter>
 
-                <div onClick={(e)=>{
-                  e.stopPropagation()
-                }} className="absolute top-3 right-3 grid grid-cols-2 gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                  className="absolute top-3 right-3 grid grid-cols-2 gap-1 opacity-0 transition-opacity group-hover:opacity-100"
+                >
                   <Button
                     size="icon"
                     variant="ghost"
@@ -223,7 +251,7 @@ const ToolAdminListing = () => {
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
                           This action cannot be undone. This will permanently
-                          delete the tool "{tool.name}".
+                          delete the tool &quot;{tool.name}&quot;.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>

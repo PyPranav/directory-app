@@ -1,6 +1,5 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { success } from "zod/v4";
 import { handleRouterError } from "~/lib/utils";
 
 import {
@@ -19,9 +18,10 @@ export const toolsRouter = createTRPCRouter({
         logo_url: z.string().optional(),
         website: z.string().optional(),
         slug: z.string().min(4),
+        metadataDescription: z.string().optional()
       }),
     )
-    .mutation(async ({ ctx, input, signal }) => {
+    .mutation(async ({ ctx, input }) => {
       try {
         const categoryExists = await ctx.db.categories.findUnique({
           where: { id: input.category },
@@ -31,6 +31,12 @@ export const toolsRouter = createTRPCRouter({
             code: "BAD_REQUEST",
             message: "Category not found",
           });
+        }
+        const checkUniqueSlug = await ctx.db.tools.findFirst({
+          where: { category: input.category, slug: input.slug },
+        })
+        if (checkUniqueSlug) {
+          throw new TRPCError({ message: "please enter a unique slug", code: "BAD_REQUEST" })
         }
         const newData = await ctx.db.tools.create({
           data: input,
@@ -44,37 +50,119 @@ export const toolsRouter = createTRPCRouter({
           };
         }
       } catch (error) {
-       handleRouterError(error, ['slug'])
+        handleRouterError(error, ["slug"]);
+      }
+    }),
+  getByCategorySlug: publicProcedure
+    .input(z.object({ name: z.string(), categorySlug: z.string() }))
+    .query(async ({ ctx, input: { name, categorySlug } }) => {
+
+      try {
+        const category = await ctx.db.categories.findUnique({
+          where: {
+            slug: categorySlug,
+          },
+        });
+        if (category) {
+          return ctx.db.tools.findMany({
+            where: {
+              name: {
+                contains: name,
+              },
+              category: category.id,
+            },
+            orderBy: {
+              created_at: "desc",
+            },
+          });
+        } else {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Invalid Slug",
+          });
+        }
+      }
+      catch (err) {
+        handleRouterError(err)
       }
     }),
   getByCategory: publicProcedure
     .input(z.object({ name: z.string(), category: z.string() }))
-    .query(({ ctx, input: { name, category } }) =>
-      ctx.db.tools.findMany({
+    .query(async ({ ctx, input: { name, category } }) => {
+      try {
+        return ctx.db.tools.findMany({
+          where: {
+            name: {
+              contains: name,
+              mode: "insensitive"
+            },
+            category: category,
+          },
+          orderBy: {
+            created_at: "desc",
+          },
+
+        })
+      } catch (err) {
+        handleRouterError(err)
+      }
+    }
+    ),
+  getBySlugs: publicProcedure
+    .input(z.object({ toolSlug: z.string(), categorySlug: z.string() }))
+    .query(async ({ ctx, input: { toolSlug, categorySlug } }) => {
+      try {
+        const category = await ctx.db.categories.findUnique({
+          where: {
+            slug: categorySlug,
+          },
+        });
+        if (category) {
+          return ctx.db.tools.findFirstOrThrow({
+            include: {
+              Categories: true,
+            },
+            where: {
+              slug: toolSlug,
+              category: category.id,
+            },
+
+          });
+        } else {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Invalid Slug",
+          });
+        }
+      }
+      catch (err) {
+        handleRouterError(err)
+      }
+    }),
+  getAll: publicProcedure.input(z.object({
+    name: z.string().optional(),
+  })).query(({ ctx, input }) => {
+    try {
+      return ctx.db.tools.findMany({
+        include: {
+          Categories: true,
+        },
         where: {
           name: {
-            contains: name,
-          },
-          category,
+            contains: input.name,
+            mode: "insensitive"
+          }
         },
-        orderBy:{
-            created_at:'desc'
+        orderBy: {
+          created_at: 'desc'
         }
-      }),
-    ),
-  getById: publicProcedure
-    .input(
-      z.object({
-        id: z.string(),
-      }),
-    )
-    .query(({ ctx, input: { id } }) =>
-      ctx.db.tools.findUnique({
-        where: {
-          id,
-        },
-      }),
-    ),
+      })
+    }
+    catch (err) {
+      handleRouterError(err)
+    }
+  }
+  ),
   delete: protectedProcedure
     .input(
       z.object({
@@ -96,7 +184,7 @@ export const toolsRouter = createTRPCRouter({
           };
         }
       } catch (error) {
-        handleRouterError(error)
+        handleRouterError(error);
       }
     }),
   update: protectedProcedure
@@ -109,10 +197,30 @@ export const toolsRouter = createTRPCRouter({
         website: z.string().optional(),
         slug: z.string().optional(),
         id: z.string(),
+        metadataDescription: z.string().optional()
       }),
     )
-    .mutation(async ({ ctx, input, signal }) => {
+    .mutation(async ({ ctx, input }) => {
       try {
+        const oldData = await ctx.db.tools.findUnique({
+          where: {
+            id: input.id
+          }
+        })
+        if (!oldData) {
+          throw new TRPCError({ message: "please enter a valid id", code: "BAD_REQUEST" })
+
+        }
+        const checkUnique = await ctx.db.tools.findFirst({
+          where: {
+            category: oldData.category, slug: input.slug, id: {
+              not: input.id
+            }
+          },
+        })
+        if (checkUnique) {
+          throw new TRPCError({ message: "please enter a unique slug", code: "BAD_REQUEST" })
+        }
         const newData = await ctx.db.tools.update({
           data: input,
           where: {
@@ -128,7 +236,7 @@ export const toolsRouter = createTRPCRouter({
           };
         }
       } catch (error) {
-        handleRouterError(error, ['slug'])
+        handleRouterError(error, ["slug"]);
       }
     }),
 });

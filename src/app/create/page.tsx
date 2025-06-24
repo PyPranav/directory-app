@@ -1,27 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { Edit, Trash2, Plus, Loader2 } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
 
-import { api } from "~/trpc/react";
 import { Button } from "~/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "~/components/ui/alert-dialog";
-import { CategoryModal } from "~/app/_components/category-modal";
+import { api } from "~/trpc/react";
+
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { CategoryModal } from "~/app/_components/CategoryModal";
+import CategoryCard from "../_components/CategoryCard";
+import { useSession } from "next-auth/react"
 
 const DirectoryAdminListing = () => {
+  const session = useSession()
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{
     id: string;
@@ -32,45 +24,46 @@ const DirectoryAdminListing = () => {
 
   const utils = api.useUtils();
 
-  const { data: categories, isLoading } = api.categories.getAll.useQuery({});
+  const { data: categories, isLoading } = api.categories.getAll.useQuery({
+    name: "",
+  });
   const createCategory = api.categories.create.useMutation({
-    onSuccess: () => {
-      utils.categories.getAll.invalidate();
+    onSuccess: async () => {
+      await utils.categories.getAll.invalidate();
       setIsModalOpen(false);
-      toast.success("Category created successfully")
+      toast.success("Category created successfully");
     },
-    onError: (error)=>{
-        toast.error(error.message)
-    }
+    onError: (error) => {
+      toast.error(error.message);
+    },
   });
 
   const updateCategory = api.categories.update.useMutation({
-    onSuccess: () => {
-      utils.categories.getAll.invalidate();
+    onSuccess: async () => {
+      await utils.categories.getAll.invalidate();
       setIsModalOpen(false);
       setEditingCategory(null);
-      toast.success("Category updated successfully")
-
+      toast.success("Category updated successfully");
     },
-    onError: (error)=>{
-        toast.error(error.message)
-    }
+    onError: (error) => {
+      toast.error(error.message);
+    },
   });
 
   const deleteCategory = api.categories.delete.useMutation({
-    onSuccess: () => {
-      utils.categories.getAll.invalidate();
-      toast.success("Category deleted successfully")
-
+    onSuccess: async () => {
+      await utils.categories.getAll.invalidate();
+      toast.success("Category deleted successfully");
     },
   });
 
-  const handleSubmit = async (data: { name: string; slug: string }) => {
+  const handleSubmit = async (data: { name: string; slug: string, metadataDescription?:string }) => {
     if (editingCategory) {
       updateCategory.mutate({
         id: editingCategory.id,
         name: data.name,
         slug: data.slug,
+        metadataDescription:data.metadataDescription
       });
     } else {
       createCategory.mutate(data);
@@ -95,6 +88,13 @@ const DirectoryAdminListing = () => {
     setIsModalOpen(false);
     setEditingCategory(null);
   };
+
+  
+  useEffect(()=>{
+    if(session.status==='unauthenticated'){
+      router.push("/api/auth/signin")
+    }
+  }, [session, router])
 
   return (
     <div className="container mx-auto p-6">
@@ -128,76 +128,17 @@ const DirectoryAdminListing = () => {
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-3 2xl:grid-cols-4">
             {categories?.map((category) => (
-              <Card
+              <CategoryCard
+              onCardClick={() => {
+                router.push(
+                  `create/${category.slug}`,
+                );
+              }}
+                category={category}
                 key={category.id}
-                className="group relative h-full transition-shadow hover:shadow-lg"
-                onClick={()=>{
-                    router.push(`create/${category.id}`)
-                }}
-              >
-                <CardHeader className="pb-3">
-                  <CardTitle className="line-clamp-2 text-lg">
-                    {category.name}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="flex-1">
-                  <p className="text-muted-foreground mb-2 text-sm break-all">
-                    Slug: {category.slug}
-                  </p>
-                  <p className="text-muted-foreground text-xs">
-                    Created:{" "}
-                    {new Date(category.created_at).toLocaleDateString()}
-                  </p>
-                </CardContent>
-
-                {/* Hover Actions */}
-                <div onClick={(e)=>{
-                    e.stopPropagation()
-                }} className="absolute top-3 right-3 grid grid-cols-2 gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => 
-                        handleEdit(category)
-                    }
-                    className="h-8 w-8"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="text-destructive hover:text-destructive h-8 w-8"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. This will permanently
-                          delete the category "{category.name}" and all
-                          associated data.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDelete(category.id)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                            <p className="text-white">Delete</p>
-                          
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </Card>
+                handleEdit={() => handleEdit(category)}
+                handleDelete={() => handleDelete(category.id)}
+              />
             ))}
           </div>
 

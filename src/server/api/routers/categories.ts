@@ -1,6 +1,5 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { success } from "zod/v4";
 import { handleRouterError } from "~/lib/utils";
 
 import {
@@ -11,8 +10,8 @@ import {
 
 export const categoriesRouter = createTRPCRouter({
   create: protectedProcedure
-    .input(z.object({ name: z.string().min(4), slug: z.string().min(4) }))
-    .mutation(async ({ ctx, input, signal }) => {
+    .input(z.object({ name: z.string().min(4), slug: z.string().min(4), metadataDescription: z.string().optional() }))
+    .mutation(async ({ ctx, input }) => {
       try {
         const newData = await ctx.db.categories.create({
           data: input,
@@ -31,30 +30,43 @@ export const categoriesRouter = createTRPCRouter({
     }),
   getAll: publicProcedure
     .input(z.object({ name: z.string().optional() }))
-    .query(({ ctx, input: { name } }) =>
-      ctx.db.categories.findMany({
-        where: {
-          name: {
-            contains: name,
+    .query(({ ctx, input: { name } }) => {
+      try {
+        return ctx.db.categories.findMany({
+          where: {
+            name: {
+              contains: name,
+              mode: 'insensitive',
+            },
           },
-        },
-        orderBy: {
-          created_at: "desc",
-        },
-      }),
+          orderBy: {
+            created_at: "desc",
+          },
+        })
+      }
+      catch (err) {
+        handleRouterError(err)
+      }
+    },
     ),
-  getById: publicProcedure
+  getBySlug: publicProcedure
     .input(
       z.object({
-        id: z.string(),
+        slug: z.string(),
       }),
     )
-    .query(({ ctx, input: { id } }) =>
-      ctx.db.categories.findUnique({
-        where: {
-          id,
-        },
-      }),
+    .query(({ ctx, input: { slug } }) => {
+      try {
+        return ctx.db.categories.findUnique({
+          where: {
+            slug,
+          },
+        })
+      }
+      catch (err) {
+        handleRouterError(err);
+      }
+    },
     ),
   delete: protectedProcedure
     .input(
@@ -91,10 +103,11 @@ export const categoriesRouter = createTRPCRouter({
       z.object({
         name: z.string().optional(),
         slug: z.string().optional(),
+        metadataDescription: z.string().optional(),
         id: z.string(),
       }),
     )
-    .mutation(async ({ ctx, input, signal }) => {
+    .mutation(async ({ ctx, input }) => {
       try {
         const newData = await ctx.db.categories.update({
           data: input,

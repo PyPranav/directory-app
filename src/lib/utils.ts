@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export const handleRouterError = (error: any, required?: string[]) => {
+export const handleRouterError = (error: unknown, required?: string[]) => {
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     // Handle unique constraint violations
     if (error.code === "P2002") {

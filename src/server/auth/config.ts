@@ -1,6 +1,5 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
-import DiscordProvider from "next-auth/providers/discord";
 import Google from "next-auth/providers/google";
 
 import { db } from "~/server/db";
@@ -56,5 +55,13 @@ export const authConfig = {
         id: user.id,
       },
     }),
+    
+    async redirect({ baseUrl }) {
+      // Always redirect to /create after signin
+      return `${baseUrl}/create`;
+    }
   },
+  pages:{
+
+  }
 } satisfies NextAuthConfig;

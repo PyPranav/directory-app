@@ -1,11 +1,9 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import React from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 
 import { Button } from "~/components/ui/button";
 import {
@@ -14,8 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog";
-import { Input } from "~/components/ui/input";
-import { Textarea } from "~/components/ui/textarea";
 import {
   Form,
   FormControl,
@@ -24,6 +20,8 @@ import {
   FormLabel,
   FormMessage,
 } from "~/components/ui/form";
+import { Input } from "~/components/ui/input";
+import { Textarea } from "~/components/ui/textarea";
 import MarkdownPreview from "./MarkdownPreview";
 
 const formSchema = z.object({
@@ -32,6 +30,7 @@ const formSchema = z.object({
   description: z.string().optional(),
   logo_url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   website: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  metadataDescription: z.string().optional()
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -46,6 +45,7 @@ interface ToolModalProps {
     description?: string | null;
     logo_url?: string | null;
     website?: string | null;
+    metadataDescription?: string | null;
   } | null;
   onSubmit: (data: FormData) => void;
   isSubmitting: boolean;
@@ -66,6 +66,7 @@ export const ToolModal = ({
       description: "",
       logo_url: "",
       website: "",
+      metadataDescription: ""
     },
   });
 
@@ -78,6 +79,7 @@ export const ToolModal = ({
           description: editingTool.description ?? "",
           logo_url: editingTool.logo_url ?? "",
           website: editingTool.website ?? "",
+          metadataDescription: editingTool.metadataDescription ?? ""
         });
       } else {
         form.reset({
@@ -149,7 +151,7 @@ export const ToolModal = ({
                       <div className="w-px bg-border hidden md:block mx-2" />
                       <div className="flex-1">
                         <div className="rounded-md border bg-muted p-5 min-h-[140px] overflow-auto" style={{ maxHeight: 500 }}>
-                          <MarkdownPreview content={field.value || ""} />
+                          <MarkdownPreview content={field.value ?? ""} />
                         </div>
                       </div>
                     </div>
@@ -184,6 +186,22 @@ export const ToolModal = ({
                 </FormItem>
               )}
             />
+
+            <div className="col-span-2">
+              <FormField
+                control={form.control}
+                name="metadataDescription"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Metadata Description</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} placeholder="Write metadata description for this category" className="min-h-[50px] " />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <div className="col-span-2 flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel

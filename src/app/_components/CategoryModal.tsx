@@ -1,13 +1,12 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import React from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "~/components/ui/dialog";
-import { Input } from "~/components/ui/input";
 import {
   Form,
   FormControl,
@@ -16,10 +15,13 @@ import {
   FormLabel,
   FormMessage,
 } from "~/components/ui/form";
+import { Input } from "~/components/ui/input";
+import { Textarea } from "~/components/ui/textarea";
 
 const formSchema = z.object({
   name: z.string().min(4, "Name must be at least 4 characters"),
   slug: z.string().min(4, "Slug must be at least 4 characters"),
+  metadataDescription: z.string()
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -27,7 +29,7 @@ type FormData = z.infer<typeof formSchema>;
 interface CategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  editingCategory: { id: string; name: string; slug: string } | null;
+  editingCategory: { id: string; name: string; slug: string, metadataDescription?: string } | null;
   onSubmit: (data: FormData) => void;
   isSubmitting: boolean;
 }
@@ -44,6 +46,7 @@ export const CategoryModal = ({
     defaultValues: {
       name: "",
       slug: "",
+      metadataDescription: "",
     },
   });
 
@@ -54,6 +57,7 @@ export const CategoryModal = ({
         form.reset({
           name: editingCategory.name,
           slug: editingCategory.slug,
+          metadataDescription: editingCategory.metadataDescription
         });
       } else {
         form.reset();
@@ -61,8 +65,8 @@ export const CategoryModal = ({
     }
   }, [isOpen, editingCategory, form]);
 
-  const handleSubmit = async (data: FormData) => {
-    await onSubmit(data);
+  const handleSubmit = (data: FormData) => {
+    onSubmit(data);
   };
 
   return (
@@ -80,7 +84,7 @@ export const CategoryModal = ({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>Name*</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
@@ -96,12 +100,25 @@ export const CategoryModal = ({
               name="slug"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Slug</FormLabel>
+                  <FormLabel>Slug*</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
                       placeholder="Enter category slug"
                     />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="metadataDescription"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Metadata Description</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} placeholder="Write metadata description for this category" className="min-h-[100px]" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -122,8 +139,8 @@ export const CategoryModal = ({
                 {isSubmitting || form.formState.isSubmitting
                   ? "Saving..."
                   : editingCategory
-                  ? "Update"
-                  : "Create"}
+                    ? "Update"
+                    : "Create"}
               </Button>
             </div>
           </form>

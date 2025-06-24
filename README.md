@@ -1,29 +1,66 @@
-# Create T3 App
+# Directory App
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+A highly SEO-optimized directory web application that allows admins to create and manage custom directories and tools, which are then displayed to visitors. The app dynamically generates a sitemap including all tools and categories, ensuring excellent discoverability by search engines.
 
-## What's next? How do I make an app with this?
+## Features
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+- **SEO Optimized**: Dynamic sitemap generation for all categories and tools.
+- **Admin Panel**: Easily create, update, and delete categories and tools.
+- **Custom Directories**: Organize tools under custom categories.
+- **Rich Tool Descriptions**: Supports Markdown for tool descriptions.
+- **Search Functionality**: Quickly find tools or categories.
+- **Responsive UI**: Modern, mobile-friendly design.
+- **Authentication**: Admin actions are protected.
+- **Dockerized**: Easy deployment with Docker Compose.
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+## Environment Variables
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+Create a `.env` file in the root directory with the following variables:
 
-## Learn More
+```
+# Database
+AUTH_SECRET=""
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+POSTGRES_DB=directory-app
+POSTGRES_USER=user
+POSTGRES_PASSWORD=password
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+DATABASE_URL="postgresql://user:password@db:5432/directory-app?schema=public"
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
+AUTH_TRUST_HOST=true # only for dev set to false in prod
 
-## How do I deploy this?
+NEXT_PUBLIC_BASE_URL="http://localhost:3000" # set domain for prod
+```
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+> **Note:** You can refer to `.env.example`. Make sure to update the values to match your environment.
+
+## Getting Started
+
+### 1. Clone the repository
+```bash
+git clone <repo-url>
+cd directory-app
+```
+
+### 2. Set up your environment variables
+- Copy `.env.example` to `.env` and fill in the required values as described above.
+
+### 3. Start with Docker Compose
+This will start both the PostgreSQL database and the Next.js app, run migrations, and seed initial data.
+
+```bash
+docker-compose up --build
+```
+
+The app will be available at [http://localhost:3000](http://localhost:3000).
+
+## Admin Usage
+- Visit `/create` to manage categories (add, edit, delete).
+- Click on a category to manage tools within it (add, edit, delete tools).
+- All admin actions require authentication.
+
+## SEO & Sitemap
+- The app automatically generates a sitemap at `/sitemap.xml` including all categories and tools.
+- Update `NEXT_PUBLIC_BASE_URL` in your `.env` for correct sitemap URLs in production.
