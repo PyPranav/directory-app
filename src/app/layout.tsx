@@ -6,6 +6,8 @@ import { Geist } from "next/font/google";
 import { TRPCReactProvider } from "~/trpc/react";
 import { Toaster } from "sonner";
 import Header from "./_components/Header";
+import LoadingIndicator from "./_components/LoadingIndicator";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Directory App",
@@ -23,8 +25,11 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${geist.variable}`}>
-      <body className="flex flex-col min-h-screen">
-        <Header/>
+      <body className="flex min-h-screen flex-col">
+        <Header />
+        <Suspense>
+          <LoadingIndicator />
+        </Suspense>
         <TRPCReactProvider>{children}</TRPCReactProvider>
         <Toaster position="top-right" />
       </body>
