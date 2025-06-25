@@ -1,6 +1,7 @@
 import { ExternalLink } from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import MarkdownPreview from "~/app/_components/MarkdownPreview";
 import { Badge } from "~/components/ui/badge";
 import {
@@ -73,9 +74,14 @@ export default async function ToolDetailPage({ params }: toolDetailPageProps) {
               </CardTitle>
               {/* Category Badge */}
               {category?.name && (
-                <Badge variant="secondary" className="mt-1 px-3 py-1 text-base">
-                  {category.name}
-                </Badge>
+                <Link href={`/dir/${category.slug}`}>
+                  <Badge
+                    variant="secondary"
+                    className="mt-1 px-3 py-1 text-base hover:text-blue-700 hover:underline"
+                  >
+                    {category.name}
+                  </Badge>
+                </Link>
               )}
             </div>
             {/* Created Date */}
