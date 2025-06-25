@@ -34,7 +34,7 @@ export default function LoadingIndicator() {
   if (!loading) return null;
 
   return (
-    <div className="bg-muted/30 fixed top-0 left-0 z-50 h-1 w-full">
+    <div className="bg-muted/30 fixed top-0 left-0 z-[1001] h-1 w-full">
       <div className="bg-primary animate-loading-pulse h-full rounded-r-full" />
 
       <style jsx>{`
