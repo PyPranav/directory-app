@@ -22,7 +22,10 @@ export default function LoadingIndicator() {
       if (
         target?.href &&
         target?.href !== window.location.href &&
-        target.origin === window.location.origin
+        target.target !== "_blank" &&
+        !e.ctrlKey &&
+        !e.metaKey &&
+        !e.shiftKey
       ) {
         setLoading(true);
       }
