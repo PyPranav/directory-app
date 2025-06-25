@@ -80,7 +80,7 @@ export default async function ToolDetailPage({ params }: toolDetailPageProps) {
             </div>
             {/* Created Date */}
             {tool.created_at && (
-              <div className="ml-4 min-w-[140px] self-start text-right text-sm whitespace-nowrap text-gray-400">
+              <div className="ml-4 min-w-[40px] self-start text-right text-sm whitespace-nowrap text-gray-400">
                 {new Date(tool.created_at).toLocaleDateString(undefined, {
                   year: "numeric",
                   month: "short",
