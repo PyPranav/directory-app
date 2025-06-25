@@ -8,10 +8,6 @@ export default function LoadingIndicator() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    console.log({ loading });
-  }, [loading]);
-
-  useEffect(() => {
     setLoading(false);
   }, [pathname, searchParams]);
 
