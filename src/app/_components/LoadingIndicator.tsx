@@ -19,7 +19,11 @@ export default function LoadingIndicator() {
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       const target = (e.target as Element)?.closest("a");
-      if (target?.href && target?.href !== window.location.href) {
+      if (
+        target?.href &&
+        target?.href !== window.location.href &&
+        target.origin === window.location.origin
+      ) {
         setLoading(true);
       }
     };
