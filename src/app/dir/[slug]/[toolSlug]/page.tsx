@@ -39,6 +39,29 @@ export async function generateMetadata({
     alternates: {
       canonical: `${process.env.NEXT_PUBLIC_BASE_URL}/dir/${slug}/${toolSlug}`,
     },
+    openGraph: {
+      title: `${tool.name} Tool | ${tool.Categories.name} Category`,
+      description: 
+      tool.metadataDescription ??
+      `${tool.name} Tool under the ${tool.Categories.name} Category`,
+      url: `${process.env.NEXT_PUBLIC_BASE_URL}/dir/${slug}/${toolSlug}`,
+      images: [
+        {
+          url: tool.logo_url ?? `${process.env.NEXT_PUBLIC_BASE_URL}/default-category.jpg`,
+          width: 1200,
+          height: 630,
+          alt: `${tool.name} Tool`,
+        },
+      ],
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${tool.name} Tool | ${tool.Categories.name} Category`,
+      description: tool.metadataDescription ??
+      `${tool.name} Tool under the ${tool.Categories.name} Category`,
+      images: [tool.logo_url ?? `${process.env.NEXT_PUBLIC_BASE_URL}/default-category.jpg`],
+    },
   };
 }
 
