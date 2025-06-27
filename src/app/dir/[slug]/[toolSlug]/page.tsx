@@ -36,6 +36,9 @@ export async function generateMetadata({
     description:
       tool.metadataDescription ??
       `${tool.name} Tool under the ${tool.Categories.name} Category`,
+    alternates: {
+      canonical: `${process.env.NEXT_PUBLIC_BASE_URL}/dir/${slug}/${toolSlug}`,
+    },
   };
 }
 
@@ -51,8 +54,57 @@ export default async function ToolDetailPage({ params }: toolDetailPageProps) {
   const category = tool.Categories;
   return (
     <HydrateClient>
-      <main className="bg-background flex flex-1 justify-center px-2 py-8">
-        <Card className="w-full max-w-3xl shadow-lg">
+      <main className="bg-background flex flex-col items-center justify-center px-2 py-8">
+        {/* Breadcrumb Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              itemListElement: [
+                {
+                  "@type": "ListItem",
+                  position: 1,
+                  name: "All Categories",
+                  item: `${process.env.NEXT_PUBLIC_BASE_URL}/categories`,
+                },
+                {
+                  "@type": "ListItem",
+                  position: 2,
+                  name: category.name,
+                  item: `${process.env.NEXT_PUBLIC_BASE_URL}/dir/${category.slug}`,
+                },
+                {
+                  "@type": "ListItem",
+                  position: 3,
+                  name: tool.name,
+                  item: `${process.env.NEXT_PUBLIC_BASE_URL}/dir/${category.slug}/${tool.slug}`,
+                },
+              ],
+            }),
+          }}
+        />
+
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              name: tool.name,
+              description: tool.metadataDescription ?? tool.description,
+              applicationCategory: category.name,
+              url: `${process.env.NEXT_PUBLIC_BASE_URL}/dir/${category.slug}/${tool.slug}`,
+              image: tool.logo_url,
+              ...(tool.website && {
+                offers: { "@type": "Offer", url: tool.website },
+              }),
+              datePublished: tool.created_at,
+            }),
+          }}
+        />
+        <Card className="flex w-full max-w-3xl flex-1 shadow-lg">
           <CardHeader className="flex flex-row items-center gap-4 border-b pb-4">
             {/* Logo */}
             {tool.logo_url && (
