@@ -60,7 +60,7 @@ export async function generateMetadata({
       title: `${tool.name} Tool | ${tool.Categories.name} Category`,
       description: tool.metadataDescription ??
       `${tool.name} Tool under the ${tool.Categories.name} Category`,
-      images: [tool.logo_url ?? `${process.env.NEXT_PUBLIC_BASE_URL}//favicon.ico`],
+      images: [tool.logo_url ?? `${process.env.NEXT_PUBLIC_BASE_URL}/favicon.ico`],
     },
   };
 }
