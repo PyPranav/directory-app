@@ -47,7 +47,7 @@ export async function generateMetadata({
       url: `${process.env.NEXT_PUBLIC_BASE_URL}/dir/${slug}/${toolSlug}`,
       images: [
         {
-          url: tool.logo_url ?? `${process.env.NEXT_PUBLIC_BASE_URL}/default-category.jpg`,
+          url: tool.logo_url ?? `${process.env.NEXT_PUBLIC_BASE_URL}/favicon.ico`,
           width: 1200,
           height: 630,
           alt: `${tool.name} Tool`,
@@ -60,7 +60,7 @@ export async function generateMetadata({
       title: `${tool.name} Tool | ${tool.Categories.name} Category`,
       description: tool.metadataDescription ??
       `${tool.name} Tool under the ${tool.Categories.name} Category`,
-      images: [tool.logo_url ?? `${process.env.NEXT_PUBLIC_BASE_URL}/default-category.jpg`],
+      images: [tool.logo_url ?? `${process.env.NEXT_PUBLIC_BASE_URL}//favicon.ico`],
     },
   };
 }
